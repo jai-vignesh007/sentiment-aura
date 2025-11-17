@@ -12,7 +12,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "https://sentiment-aura-w6q6-git-main-jai-vigneshs-projects.vercel.app/" 
+        "https://sentiment-aura-chi.vercel.app"
+        "https://sentiment-aura-w6q6-git-main-jai-vigneshs-projects.vercel.app",
+
     ],  
     allow_credentials=True,
     allow_methods=["*"],
