@@ -79,25 +79,61 @@ It’s smooth, real-time, and mesmerizing.
 
 ```
 
-/client
-├── /src
-│   ├── /components → UI + visual elements
-│   ├── /hooks → Deepgram audio pipeline
-│   ├── /store → Zustand global stores
-│   ├── /api → Axios backend wrapper
-│   ├── App.tsx → Main UI + layout
-│   └── AuraCanvas.tsx → Perlin noise aura
-├── package.json
-└── vite.config.ts
+The structure you provided is a non-standard text representation of a file tree, but it clearly defines the organization of your frontend (`client`) and backend (`server`) code.
 
-/server
-├── /app
-│   ├── /services
-│   ├── /utils
-│   ├── main.py → FastAPI backend
-│   └── models.py
-├── requirements.txt → Python dependencies
-└── railway.json
+Here is the hierarchical project structure derived from your text, presented in an easy-to-read, standard directory tree format, along with a brief explanation of each component's role.
+
+## 📁 Project Structure Hierarchy
+
+The project is split into two main directories: `client` (React/Frontend) and `server` (Python/Backend).
+
+```
+sentiment-aura/
+├── client/
+│   ├── src/
+│   │   ├── components/  → UI + visual elements (e.g., Controls, TranscriptPanel)
+│   │   ├── hooks/       → Deepgram audio pipeline (e.g., useDeepgram.ts)
+│   │   ├── store/       → Zustand global stores (e.g., useTranscriptionStore.ts)
+│   │   ├── api/         → Axios backend wrapper (e.g., calling sentimentApi)
+│   │   ├── App.tsx      → Main UI + layout
+│   │   └── AuraCanvas.tsx → Perlin noise aura visualization (p5.js)
+│   ├── package.json
+│   └── vite.config.ts
+│
+├── server/
+│   ├── app/
+│   │   ├── services/
+│   │   ├── utils/
+│   │   ├── main.py      → FastAPI backend entry point
+│   │   └── models.py
+│   ├── requirements.txt → Python dependencies (FastAPI, OpenAI, etc.)
+│   └── railway.json     → (Likely deployment configuration for Railway)
+│
+└── README.md
+```
+
+-----
+
+## 🧩 Component Roles Breakdown
+
+### 💻 `client/src` (Frontend)
+
+| Directory/File | Role |
+| :--- | :--- |
+| **`components/`** | Contains reusable React components responsible for the **user interface and visual elements**, such such as buttons, panels, and layout containers. |
+| **`hooks/`** | Houses custom React hooks, specifically **`useDeepgram.ts`**, which manages the Web Audio API, WebSocket connection, and data piping—the core real-time pipeline. |
+| **`store/`** | Manages the **global state** (transcripts, sentiment score, connection status) using the lightweight **Zustand** library. |
+| **`api/`** | Contains wrapper functions (using **Axios**) for making asynchronous HTTP requests to the **FastAPI backend** (e.g., `analyzeSentiment`). |
+| **`App.tsx`** | The **main application layout**. It calls the core hooks (`useDeepgram`) and renders the primary components and background elements. |
+| **`AuraCanvas.tsx`** | Dedicated component for rendering the **Perlin noise visualization** using p5.js, making the background aura react to sentiment state. |
+
+### 🐍 `server` (Backend)
+
+| Directory/File | Role |
+| :--- | :--- |
+| **`app/main.py`** | The entry point for the **FastAPI** web server, defining endpoints (like `/process_text`) that receive transcribed text. |
+| **`app/services/`** | Likely contains the business logic for **interacting with external APIs** (like the OpenAI API) to perform the sentiment analysis and keyword extraction. |
+| **`requirements.txt`** | Lists all necessary **Python dependencies** required to run the backend (e.g., `fastapi`, `uvicorn`, `openai`). |
 
 ```
 ```
