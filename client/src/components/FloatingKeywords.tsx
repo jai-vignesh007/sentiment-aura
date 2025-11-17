@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useSentimentStore } from "../store/useSentimentStore";
-import { getSentimentColor } from "../util/getSentimentColor";
+// import { getSentimentColor } from "../util/getSentimentColor";
 
 
 
