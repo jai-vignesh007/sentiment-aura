@@ -80,30 +80,39 @@ Sentiment Store + Visualization
 ↓
 Dynamic Perlin-Noise Aura
 
-yaml
-Copy code
-
 ---
 
 ## 🧩 Project Structure
 
 /client
-/src
-/components → UI + visual elements
-/hooks → Deepgram audio pipeline
-/store → Zustand global stores
-/api → Axios backend wrapper
-App.tsx → Main UI + layout
-AuraCanvas.tsx → Perlin noise aura
+├── /src
+│   ├── /components → UI + visual elements
+│   ├── /hooks → Deepgram audio pipeline
+│   ├── /store → Zustand global stores
+│   ├── /api → Axios backend wrapper
+│   ├── App.tsx → Main UI + layout
+│   └── AuraCanvas.tsx → Perlin noise aura
+├── package.json
+└── vite.config.ts
 
 /server
-main.py → FastAPI backend
-requirements.txt → Python dependencies
+├── /app
+│   ├── /services
+│   ├── /utils
+│   ├── main.py → FastAPI backend
+│   └── models.py
+├── requirements.txt → Python dependencies
+└── railway.json
 
 README.md → You are here ❤️
 
-yaml
-Copy code
+---
+Here is the content you provided, structured in a clean, easily copy-pastable README file format using Markdown.
+
+````markdown
+# 🌟 Sentiment Aura: Real-Time Emotional Visualization
+
+This project demonstrates a real-time sentiment analysis application using Deepgram for transcription and a custom backend for sentiment scoring, visualized through a dynamic, Perlin-noise-driven aura in the frontend.
 
 ---
 
@@ -112,70 +121,77 @@ Copy code
 ### **1. Clone the repository**
 
 ```sh
-git clone https://github.com/yourname/sentiment-aura
+git clone [https://github.com/yourname/sentiment-aura](https://github.com/yourname/sentiment-aura)
 cd sentiment-aura
-2. Backend Setup
-Copy code
+````
+
+### **2. Backend Setup**
+
+```sh
 cd server
 python -m venv venv
-source venv/bin/activate      # Windows: venv\Scripts\activate
+source venv/bin/activate    # Use `venv\Scripts\activate` on Windows
 pip install -r requirements.txt
 uvicorn main:app --reload
-3. Frontend Setup
-Copy code
+```
+
+### **3. Frontend Setup**
+
+```sh
 cd client
 npm install
 npm run dev
-4. Add the environment variables
-Create client/.env:
+```
 
-ini
-Copy code
-VITE_DEEPGRAM_API_KEY=your_deepgram_key_here
-VITE_BACKEND_URL=http://localhost:8000
-🌈 Key Features
-🎤 Real-Time Transcription
-Uses Deepgram WebSocket streaming
+### **4. Add Environment Variables**
 
-Partial + final transcripts
+Create a file named `.env` in the `client/` directory and add the following variables:
 
-Smooth auto-scrolling
+```ini
+VITE_DEEPGRAM_API_KEY="your_deepgram_key_here"
+VITE_BACKEND_URL="http://localhost:8000"
+```
 
-🤖 AI Sentiment Engine
-Sentiment score (0–1)
+-----
 
-Label (positive / neutral / negative)
+## 🌈 Key Features
 
-Keyword extraction
+### 🎤 Real-Time Transcription
 
-Fully debounced to prevent API overload
+  * Uses Deepgram WebSocket streaming for low latency.
+  * Displays both partial and final transcripts.
+  * Features smooth, auto-scrolling transcript panel.
 
-🎨 Perlin-Noise Aura Visualization
-Changes based on sentiment:
+### 🤖 AI Sentiment Engine
 
-Hue
+  * Provides a **Sentiment Score** (0–1).
+  * Categorizes emotions into a **Label** (`positive`, `neutral`, `negative`).
+  * Includes **Keyword Extraction** from final transcripts.
+  * Fully debounced to prevent backend API overload.
 
-Brightness
+### 🎨 Perlin-Noise Aura Visualization
 
-Noise turbulence
+The background aura dynamically changes based on sentiment to visualize emotional tone:
 
-Flow speed
+  * **Hue**
+  * **Brightness**
+  * **Noise Turbulence**
+  * **Flow Speed**
+  * **Emotion Pulse**
 
-Emotion pulse
+### ✨ Floating Keyword Particles
 
-✨ Floating Keyword Particles
-Rise upward
+  * Keywords rise upward and drift.
+  * Fade out naturally.
+  * Are colored based on the corresponding emotional tone.
 
-Drift
+### 📱 Fully Responsive
 
-Fade out
+  * Clean, centered layout.
+  * Mobile-friendly design.
+  * Panels reposition elegantly on smaller screens.
 
-Colored based on emotional tone
+<!-- end list -->
 
-📱 Fully Responsive
-Clean, centered layout
-
-Mobile-friendly
-
-Panels reposition elegantly
+```
 ```
