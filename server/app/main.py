@@ -12,7 +12,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "https://your-frontend-domain.vercel.app"  # Add your Vercel URL after deployment
+        "https://sentiment-aura-w6q6-git-main-jai-vigneshs-projects.vercel.app/" 
     ],  
     allow_credentials=True,
     allow_methods=["*"],
