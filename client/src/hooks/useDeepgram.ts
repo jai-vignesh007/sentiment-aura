@@ -1,3 +1,4 @@
+// src/hooks/useDeepgram.ts
 import { useRef } from "react";
 import { useTranscriptionStore } from "../store/useTranscriptionStore";
 import { useUIStore } from "../store/useUIStore";
@@ -10,7 +11,11 @@ export function useDeepgram() {
   const processorRef = useRef<ScriptProcessorNode | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
 
-  // Zustand setters
+  // 🚨 CRITICAL FIX: Use refs for immediate state access
+  const isRunningRef = useRef(false);
+  const shouldProcessAudioRef = useRef(false);
+
+  // Get Zustand store functions
   const setPartial = useTranscriptionStore((s) => s.setPartial);
   const addFinal = useTranscriptionStore((s) => s.addFinal);
   const setRecording = useTranscriptionStore((s) => s.setRecording);
@@ -23,7 +28,15 @@ export function useDeepgram() {
   const setSentimentLoading = useSentimentStore((s) => s.setLoading);
   const setSentimentError = useSentimentStore((s) => s.setError);
 
+  const lastSentimentRef = useRef<number>(0);
+
   const start = async () => {
+    // 🚨 Prevent multiple starts
+    if (isRunningRef.current) {
+      console.log("⚠️ Already running, ignoring start");
+      return;
+    }
+
     const key = import.meta.env.VITE_DEEPGRAM_API_KEY;
     if (!key) {
       setError("Missing Deepgram API key");
@@ -31,16 +44,30 @@ export function useDeepgram() {
     }
 
     try {
+      // 🚨 SET FLAGS FIRST - synchronous
+      isRunningRef.current = true;
+      shouldProcessAudioRef.current = true;
+      
       setConn("requesting_mic");
+      setRecording(true); // Set recording state immediately
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log("🎤 Starting microphone...");
+
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          channelCount: 1,
+          sampleRate: 16000,
+          echoCancellation: true,
+          noiseSuppression: true,
+        } 
+      });
       mediaStreamRef.current = stream;
 
       const audioCtx = new AudioContext({ sampleRate: 16000 });
       audioContextRef.current = audioCtx;
 
       const source = audioCtx.createMediaStreamSource(stream);
-      const processor = audioCtx.createScriptProcessor(512, 1, 1);
+      const processor = audioCtx.createScriptProcessor(2048, 1, 1);
       processorRef.current = processor;
 
       setConn("connecting_ws");
@@ -53,93 +80,166 @@ export function useDeepgram() {
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log("Deepgram connected");
+        // 🚨 Double-check we're still supposed to be running
+        if (!isRunningRef.current) {
+          console.log("🛑 WebSocket opened but we're already stopped, closing...");
+          ws.close();
+          return;
+        }
+        
+        console.log("✅ Deepgram connected - STARTED");
         setConn("listening");
-        setRecording(true);
       };
 
       ws.onerror = (err) => {
-        console.error("WS ERROR:", err);
-        setError("WebSocket error");
+        console.error("❌ WebSocket error:", err);
+        cleanup(); // 🚨 Use cleanup function
+        setError("WebSocket connection failed");
         setConn("error");
       };
 
-      ws.onclose = () => {
-        console.log("Deepgram closed");
+      ws.onclose = (event) => {
+        console.log("🔌 Deepgram closed:", event.code, event.reason);
+        cleanup(); // 🚨 Use cleanup function
         setConn("stopped");
-        setRecording(false);
       };
 
       ws.onmessage = (msg) => {
+        // 🚨 Check if we should still process messages
+        if (!isRunningRef.current) return;
+        
         const data = JSON.parse(msg.data);
-
         if (!data.channel) return;
 
-        const transcript =
-          data.channel.alternatives[0]?.transcript?.trim() || "";
-
+        const transcript = data.channel.alternatives[0]?.transcript?.trim() || "";
         if (transcript === "") return;
 
-        if (data.is_final) {
-          addFinal(transcript);
-          requestSentiment(transcript);  
-        } else {
+        if (!data.is_final) {
           setPartial(transcript);
-          requestSentiment(transcript);  
+          return;
+        }
+
+        // FINAL transcript
+        setPartial("");
+        addFinal(transcript);
+
+        const now = Date.now();
+        if (now - lastSentimentRef.current > 1500) {
+          lastSentimentRef.current = now;
+          requestSentiment(transcript);
         }
       };
 
+      // 🚨 CRITICAL: Audio processing with immediate stop check
       processor.onaudioprocess = (event) => {
-        if (ws.readyState !== 1) return;
-        const input = event.inputBuffer.getChannelData(0);
-        const int16 = convert(input);
-        ws.send(int16);
+        // 🚨 IMMEDIATE check - no async state
+        if (!shouldProcessAudioRef.current) return;
+        if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+        
+        const samples = event.inputBuffer.getChannelData(0);
+        wsRef.current.send(convert(samples));
       };
 
       source.connect(processor);
       processor.connect(audioCtx.destination);
+
     } catch (err: any) {
-      console.error("Start error:", err);
-      setError("Mic access failed");
+      console.error("❌ Start error:", err);
+      cleanup(); // 🚨 Cleanup on error
+      setError("Microphone access failed: " + err.message);
       setConn("error");
     }
   };
 
-  const stop = () => {
+  // 🚨 NEW: Centralized cleanup function
+  const cleanup = () => {
+    console.log("🧹 Cleaning up resources...");
+    
+    // 🚨 IMMEDIATELY stop audio processing
+    shouldProcessAudioRef.current = false;
+    isRunningRef.current = false;
+
+    // Cleanup WebSocket
+    try {
+      if (wsRef.current) {
+        wsRef.current.close(1000, "User stopped");
+        wsRef.current = null;
+      }
+    } catch (err) {
+      console.error("Error closing WebSocket:", err);
+    }
+
+    // Cleanup audio processing
+    try {
+      if (processorRef.current) {
+        processorRef.current.disconnect();
+        processorRef.current = null;
+      }
+    } catch (err) {
+      console.error("Error disconnecting processor:", err);
+    }
+
+    // Cleanup audio context
+    try {
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+    } catch (err) {
+      console.error("Error closing audio context:", err);
+    }
+
+    // 🚨 CRITICAL: Stop microphone tracks
+    try {
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((track) => {
+          console.log("🛑 Stopping track:", track.kind, track.label);
+          track.stop(); // This physically stops the microphone
+          track.enabled = false;
+        });
+        mediaStreamRef.current = null;
+      }
+    } catch (err) {
+      console.error("Error stopping media tracks:", err);
+    }
+
+    // Update UI state
     setRecording(false);
     setConn("stopped");
+    
+    console.log("✅ Cleanup completed");
+  };
 
-    wsRef.current?.close();
-    processorRef.current?.disconnect();
-    audioContextRef.current?.close();
-    mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
+  const stop = () => {
+    console.log("🛑 STOP button clicked");
+    cleanup(); // 🚨 Use the centralized cleanup
   };
 
   const requestSentiment = async (text: string) => {
-  try {
-    setSentimentLoading(true);
-    setSentimentError(null);
+    try {
+      setSentimentLoading(true);
+      setSentimentError(null);
 
-    const result = await analyzeSentiment(text);
-    setSentiment(result.sentiment_score, result.sentiment_label);
-    setKeywords(result.keywords);
-  } catch (err) {
-    console.error("Sentiment error:", err);
-    setSentimentError("Failed to analyze sentiment");
-  } finally {
-    setSentimentLoading(false);
-  }
-};
-
+      const result = await analyzeSentiment(text);
+      setSentiment(result.sentiment_score, result.sentiment_label);
+      setKeywords(result.keywords);
+    } catch (err) {
+      console.error("Sentiment error:", err);
+      setSentimentError("Failed to analyze sentiment");
+    } finally {
+      setSentimentLoading(false);
+    }
+  };
 
   return { start, stop };
 }
 
+// AUDIO FORMAT
 function convert(buffer: Float32Array) {
   const out = new Int16Array(buffer.length);
   for (let i = 0; i < buffer.length; i++) {
-    const s = Math.max(-1, Math.min(1, buffer[i]));
-    out[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+    const v = Math.max(-1, Math.min(1, buffer[i]));
+    out[i] = v < 0 ? v * 0x8000 : v * 0x7fff;
   }
   return out.buffer;
 }

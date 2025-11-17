@@ -1,44 +1,25 @@
-import React, { useEffect, useState, useRef } from "react";
+// src/components/Controls.tsx
+// Minimal top controls bar containing a Start/Stop toggle and recording indicator.
+// This component no longer initializes Deepgram itself.
+// The parent (App.tsx) provides start() and stop() so a single Deepgram instance is shared.
+
+import React from "react";
 import { useTranscriptionStore } from "../store/useTranscriptionStore";
 import { useUIStore } from "../store/useUIStore";
-import { useDeepgram } from "../hooks/useDeepgram";
 
-const Controls: React.FC = () => {
-  const { start, stop } = useDeepgram();
+interface ControlsProps {
+  start: () => Promise<void>;
+  stop: () => void;
+}
+
+const Controls: React.FC<ControlsProps> = ({ start, stop }) => {
+  // Global recording state
   const isRecording = useTranscriptionStore((s) => s.isRecording);
+
+  // Connection state text shown next to indicator
   const connState = useUIStore((s) => s.connectionState);
 
-  const [volume, setVolume] = useState(0);
-  const audioRef = useRef<AnalyserNode | null>(null);
-
-  // Start mic volume visualization
-  useEffect(() => {
-    let raf: number;
-
-    if (isRecording) {
-      navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-        const ctx = new AudioContext();
-        const src = ctx.createMediaStreamSource(stream);
-        const analyser = ctx.createAnalyser();
-        analyser.fftSize = 256;
-        src.connect(analyser);
-        audioRef.current = analyser;
-
-        const data = new Uint8Array(analyser.frequencyBinCount);
-
-        const tick = () => {
-          analyser.getByteFrequencyData(data);
-          const avg = data.reduce((a, b) => a + b, 0) / data.length;
-          setVolume(avg / 255);
-          raf = requestAnimationFrame(tick);
-        };
-        tick();
-      });
-    }
-
-    return () => cancelAnimationFrame(raf);
-  }, [isRecording]);
-
+  // Toggle microphone session
   const handleClick = () => {
     if (isRecording) stop();
     else start();
@@ -55,7 +36,7 @@ const Controls: React.FC = () => {
         marginBottom: 18,
       }}
     >
-      {/* Start/Stop Button */}
+      {/* Start/Stop button controlling the Deepgram session */}
       <button
         onClick={handleClick}
         style={{
@@ -76,8 +57,7 @@ const Controls: React.FC = () => {
             : "0 0 20px rgba(255,255,255,0.08)",
         }}
         onMouseEnter={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.transform =
-            "scale(1.05)";
+          (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.05)";
         }}
         onMouseLeave={(e) => {
           (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
@@ -86,26 +66,19 @@ const Controls: React.FC = () => {
         {label}
       </button>
 
-      {/* Mic Visualizer */}
+      {/* Small recording indicator circle */}
       <div
         style={{
-          display: "flex",
-          justifyContent: "center",
-          width: "100%",
-          //   width: 14,
-          height: 14,
+          width: 12,
+          height: 12,
           borderRadius: "50%",
           background: isRecording ? "#ff4f4f" : "#666",
-          transform: `scale(${1 + volume * 1.2})`,
-          transition: "transform 0.05s linear",
-          boxShadow: isRecording
-            ? `0 0 ${8 + volume * 20}px rgba(255,80,80,0.7)`
-            : "none",
+          boxShadow: isRecording ? "0 0 15px rgba(255,80,80,0.7)" : "none",
         }}
       />
 
-      {/* Connection Status */}
-      <span style={{ fontSize: "0.85rem", opacity: 0.75, marginLeft: 6 }}>
+      {/* Connection status text */}
+      <span style={{ fontSize: "0.85rem", opacity: 0.75 }}>
         {connState}
       </span>
     </div>
