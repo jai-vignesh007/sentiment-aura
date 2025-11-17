@@ -7,14 +7,17 @@ from app.services.llm_client import analyze_text
 app = FastAPI()
 
 # CORS – allow frontend during dev
+# In your server code, update CORS:
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  
+    allow_origins=[
+        "http://localhost:5173",
+        "https://your-frontend-domain.vercel.app"  # Add your Vercel URL after deployment
+    ],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 @app.get("/health")
 def health():
