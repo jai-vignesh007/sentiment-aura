@@ -1,10 +1,11 @@
-# 🎨 Sentiment Aura
+Here is the content you provided, structured in a clean, easily copy-pastable README file format using Markdown.
+
+```markdown
+# 🌟 Sentiment Aura: Real-Time Emotional Visualization
 
 ### Real-Time Emotion-Reactive AI Visual Experience
 
-_A live, breathing, responsive AI aura that visualizes your emotional tone._
-
-> Speak → Transcribe → Analyze → Visualize → Feel the Vibe ✨  
+> Speak → Transcribe → Analyze → Visualize → Feel the Vibe ✨
 > Built as part of the Memory Machines Full-Stack Assessment.
 
 ---
@@ -13,10 +14,10 @@ _A live, breathing, responsive AI aura that visualizes your emotional tone._
 
 **Sentiment Aura** is a fully real-time, full-stack AI demo that takes your speech and transforms it into:
 
-- 📜 Live streaming transcription
-- 🤖 Instant sentiment classification
-- 🔖 Keyword extraction
-- 🌈 A dynamic Perlin-noise aura that reacts emotionally to your voice
+* 📜 **Live streaming transcription**
+* 🤖 **Instant sentiment classification**
+* 🔖 **Keyword extraction**
+* 🌈 A **dynamic Perlin-noise aura** that reacts emotionally to your voice
 
 It’s a mood ring for your speech — fluid, expressive, and visually immersive.
 
@@ -24,12 +25,12 @@ It’s a mood ring for your speech — fluid, expressive, and visually immersive
 
 ## 👁️ The Experience
 
-1. Click the glowing microphone.
-2. Start speaking.
-3. Watch your **words appear live**.
-4. The AI detects your sentiment.
-5. The entire background **changes color, energy, and motion** based on how you feel.
-6. Keywords float upward like glowing particles.
+1.  Click the glowing microphone.
+2.  Start speaking.
+3.  Watch your **words appear live**.
+4.  The AI detects your sentiment.
+5.  The entire background **changes color, energy, and motion** based on how you feel.
+6.  Keywords float upward like glowing particles.
 
 It’s smooth, real-time, and mesmerizing.
 
@@ -39,50 +40,44 @@ It’s smooth, real-time, and mesmerizing.
 
 ### **Frontend**
 
-- React
-- Zustand (global state management)
-- p5.js + react-p5 (Perlin noise visualization)
-- Axios
-- Framer Motion
-- Web Audio API
+* **React**
+* **Zustand** (global state management)
+* **p5.js + react-p5** (Perlin noise visualization)
+* **Axios**
+* **Framer Motion**
+* **Web Audio API**
 
 ### **Backend**
 
-- FastAPI (Python)
-- Async OpenAI API call
-- CORS-enabled JSON API
+* **FastAPI** (Python)
+* **Async OpenAI API call**
+* **CORS-enabled JSON API**
 
 ### **External APIs**
 
-| Purpose                    | API                    |
-| -------------------------- | ---------------------- |
-| 🎙️ Real-time transcription | Deepgram WebSocket API |
-| 🤖 Sentiment & keywords    | OpenAI                 |
+| Purpose | API |
+| :--- | :--- |
+| 🎙️ Real-time transcription | **Deepgram WebSocket API** |
+| 🤖 Sentiment & keywords | **OpenAI** |
 
 ---
 
 ## 📐 Architecture
 
-User Speech
-↓ (raw audio)
-React Frontend
-↓ WebSocket stream
-Deepgram API
-↓ JSON transcripts
-Transcription Store (Zustand)
-↓ final text
-Backend API (FastAPI)
-/process_text
-↓
-OpenAI / Gemini / Claude
-↓ Sentiment + Keywords
-Sentiment Store + Visualization
-↓
-Dynamic Perlin-Noise Aura
+1.  **User Speech** $\downarrow$ (raw audio)
+2.  **React Frontend** $\downarrow$ WebSocket stream
+3.  **Deepgram API** $\downarrow$ JSON transcripts
+4.  **Transcription Store (Zustand)** $\downarrow$ final text
+5.  **Backend API (FastAPI) /process\_text** $\downarrow$
+6.  **OpenAI / Gemini / Claude** $\downarrow$ Sentiment + Keywords
+7.  **Sentiment Store + Visualization** $\downarrow$
+8.  **Dynamic Perlin-Noise Aura**
 
 ---
 
 ## 🧩 Project Structure
+
+```
 
 /client
 ├── /src
@@ -104,10 +99,8 @@ Dynamic Perlin-Noise Aura
 ├── requirements.txt → Python dependencies
 └── railway.json
 
-README.md → You are here ❤️
-
----
-Here is the content you provided, structured in a clean, easily copy-pastable README file format using Markdown.
+```
+```
 
 ````markdown
 # 🌟 Sentiment Aura: Real-Time Emotional Visualization
