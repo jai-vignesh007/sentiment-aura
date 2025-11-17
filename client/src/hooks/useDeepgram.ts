@@ -11,11 +11,11 @@ export function useDeepgram() {
   const processorRef = useRef<ScriptProcessorNode | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
 
-  // 🚨 CRITICAL FIX: Use refs for immediate state access
+  // Use refs for immediate state access to avoid async state issues
   const isRunningRef = useRef(false);
   const shouldProcessAudioRef = useRef(false);
 
-  // Get Zustand store functions
+  // Zustand store functions for state management
   const setPartial = useTranscriptionStore((s) => s.setPartial);
   const addFinal = useTranscriptionStore((s) => s.addFinal);
   const setRecording = useTranscriptionStore((s) => s.setRecording);
@@ -31,9 +31,9 @@ export function useDeepgram() {
   const lastSentimentRef = useRef<number>(0);
 
   const start = async () => {
-    // 🚨 Prevent multiple starts
+    // Prevent multiple simultaneous recording sessions
     if (isRunningRef.current) {
-      console.log("⚠️ Already running, ignoring start");
+      console.log("Already running, ignoring start");
       return;
     }
 
@@ -44,15 +44,16 @@ export function useDeepgram() {
     }
 
     try {
-      // 🚨 SET FLAGS FIRST - synchronous
+      // Set flags synchronously before any async operations
       isRunningRef.current = true;
       shouldProcessAudioRef.current = true;
       
       setConn("requesting_mic");
-      setRecording(true); // Set recording state immediately
+      setRecording(true);
 
-      console.log("🎤 Starting microphone...");
+      console.log("Starting microphone...");
 
+      // Request microphone access with optimal audio settings
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           channelCount: 1,
@@ -63,6 +64,7 @@ export function useDeepgram() {
       });
       mediaStreamRef.current = stream;
 
+      // Initialize audio context for processing
       const audioCtx = new AudioContext({ sampleRate: 16000 });
       audioContextRef.current = audioCtx;
 
@@ -72,6 +74,7 @@ export function useDeepgram() {
 
       setConn("connecting_ws");
 
+      // Establish WebSocket connection to Deepgram
       const ws = new WebSocket(
         `wss://api.deepgram.com/v1/listen?model=nova&encoding=linear16&sample_rate=16000`,
         ["token", key]
@@ -80,32 +83,31 @@ export function useDeepgram() {
       wsRef.current = ws;
 
       ws.onopen = () => {
-        // 🚨 Double-check we're still supposed to be running
+        // Verify we're still supposed to be running after async operations
         if (!isRunningRef.current) {
-          console.log("🛑 WebSocket opened but we're already stopped, closing...");
           ws.close();
           return;
         }
         
-        console.log("✅ Deepgram connected - STARTED");
+        console.log("Deepgram connected - STARTED");
         setConn("listening");
       };
 
       ws.onerror = (err) => {
-        console.error("❌ WebSocket error:", err);
-        cleanup(); // 🚨 Use cleanup function
+        console.error("WebSocket error:", err);
+        cleanup();
         setError("WebSocket connection failed");
         setConn("error");
       };
 
       ws.onclose = (event) => {
-        console.log("🔌 Deepgram closed:", event.code, event.reason);
-        cleanup(); // 🚨 Use cleanup function
+        console.log("Deepgram closed:", event.code, event.reason);
+        cleanup();
         setConn("stopped");
       };
 
       ws.onmessage = (msg) => {
-        // 🚨 Check if we should still process messages
+        // Only process messages if recording is still active
         if (!isRunningRef.current) return;
         
         const data = JSON.parse(msg.data);
@@ -114,15 +116,17 @@ export function useDeepgram() {
         const transcript = data.channel.alternatives[0]?.transcript?.trim() || "";
         if (transcript === "") return;
 
+        // Handle partial (interim) transcript
         if (!data.is_final) {
           setPartial(transcript);
           return;
         }
 
-        // FINAL transcript
+        // Handle final transcript
         setPartial("");
         addFinal(transcript);
 
+        // Throttle sentiment analysis requests
         const now = Date.now();
         if (now - lastSentimentRef.current > 1500) {
           lastSentimentRef.current = now;
@@ -130,9 +134,9 @@ export function useDeepgram() {
         }
       };
 
-      // 🚨 CRITICAL: Audio processing with immediate stop check
+      // Audio processing callback - runs continuously during recording
       processor.onaudioprocess = (event) => {
-        // 🚨 IMMEDIATE check - no async state
+        // Immediate check to stop audio processing when needed
         if (!shouldProcessAudioRef.current) return;
         if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
         
@@ -144,22 +148,22 @@ export function useDeepgram() {
       processor.connect(audioCtx.destination);
 
     } catch (err: any) {
-      console.error("❌ Start error:", err);
-      cleanup(); // 🚨 Cleanup on error
+      console.error("Start error:", err);
+      cleanup();
       setError("Microphone access failed: " + err.message);
       setConn("error");
     }
   };
 
-  // 🚨 NEW: Centralized cleanup function
+  // Centralized cleanup function to properly release all resources
   const cleanup = () => {
-    console.log("🧹 Cleaning up resources...");
+    console.log("Cleaning up resources...");
     
-    // 🚨 IMMEDIATELY stop audio processing
+    // Immediately stop all processing flags
     shouldProcessAudioRef.current = false;
     isRunningRef.current = false;
 
-    // Cleanup WebSocket
+    // Cleanup WebSocket connection
     try {
       if (wsRef.current) {
         wsRef.current.close(1000, "User stopped");
@@ -169,7 +173,7 @@ export function useDeepgram() {
       console.error("Error closing WebSocket:", err);
     }
 
-    // Cleanup audio processing
+    // Cleanup audio processing nodes
     try {
       if (processorRef.current) {
         processorRef.current.disconnect();
@@ -189,12 +193,12 @@ export function useDeepgram() {
       console.error("Error closing audio context:", err);
     }
 
-    // 🚨 CRITICAL: Stop microphone tracks
+    // Stop all microphone tracks
     try {
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach((track) => {
-          console.log("🛑 Stopping track:", track.kind, track.label);
-          track.stop(); // This physically stops the microphone
+          console.log("Stopping track:", track.kind, track.label);
+          track.stop();
           track.enabled = false;
         });
         mediaStreamRef.current = null;
@@ -207,12 +211,12 @@ export function useDeepgram() {
     setRecording(false);
     setConn("stopped");
     
-    console.log("✅ Cleanup completed");
+    console.log("Cleanup completed");
   };
 
   const stop = () => {
-    console.log("🛑 STOP button clicked");
-    cleanup(); // 🚨 Use the centralized cleanup
+    console.log("STOP button clicked");
+    cleanup();
   };
 
   const requestSentiment = async (text: string) => {
@@ -234,7 +238,7 @@ export function useDeepgram() {
   return { start, stop };
 }
 
-// AUDIO FORMAT
+// Convert Float32Array audio data to Int16Array for Deepgram
 function convert(buffer: Float32Array) {
   const out = new Int16Array(buffer.length);
   for (let i = 0; i < buffer.length; i++) {

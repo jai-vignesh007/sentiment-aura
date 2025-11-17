@@ -14,8 +14,8 @@ const KeywordsPanel: React.FC = () => {
   return (
     <div
       style={{
-        flex: "1 1 400px",       // ⬅ same width as transcript
-        maxWidth: "450px",       // ⬅ same ceiling width
+        flex: "1 1 400px",       
+        maxWidth: "450px",       
         minHeight: "160px",
         maxHeight: "35vh",
 

@@ -22,8 +22,8 @@ const TranscriptPanel: React.FC = () => {
     <div
       ref={ref}
       style={{
-        flex: "1 1 400px",      // ⬅ equal width rule
-        maxWidth: "450px",      // ⬅ both panels same max width
+        flex: "1 1 400px",      
+        maxWidth: "450px",      
         minHeight: "160px",
         maxHeight: "35vh",
 

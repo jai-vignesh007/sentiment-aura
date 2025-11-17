@@ -68,12 +68,12 @@ const FloatingKeywords: React.FC = () => {
             }}
             animate={{
               x: startX + drift,
-              y: -80, // float to top
+              y: -80, 
               opacity: [0, 1, 1, 0],
               scale: [0.7, 1, 1, 0.9],
             }}
             transition={{
-              duration: 4 + Math.random() * 2, // 4–6 seconds
+              duration: 4 + Math.random() * 2, 
               ease: "easeInOut",
             }}
             style={{
